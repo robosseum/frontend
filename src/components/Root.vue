@@ -1,15 +1,12 @@
-<template>
-  <div class="root">
-    <button @click="createTable">Create table</button>
-    <ul>
-      <li v-for="table in tables" :key="table">
-        <router-link :to="table">
-          {{ table }}
-        </router-link>
-        <button @click="deleteTable(table)">X</button>
-      </li>
-    </ul>
-  </div>
+<template lang="pug">
+  .root
+    button.button.is-primary(@click="createTable") Create table
+    ul
+      li(v-for="table in tables" :key="table")
+        router-link(:to="table") {{ table }}
+        button.button.is-danger(@click="deleteTable(table)")
+          span.icon
+            .fal.fa-trash-alt
 </template>
 
 <script>

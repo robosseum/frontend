@@ -1,21 +1,32 @@
-<template>
-  <div id="app">
-    <router-view/>
-  </div>
+<template lang="pug">
+  #app
+    .navbar.is-primary
+      .navbar-menu
+        .navbar-end
+          .navbar-item
+            .buttons
+              .button.is-light(v-if="$route.name === 'Table'" @click="start")
+                | Start
+              .button.is-danger(v-if="$route.name === 'Table'" @click="stop")
+                | Stop
+    .section
+      .container
+        router-view
 </template>
 
 <script>
 export default {
-  name: 'App'
+  name: 'App',
+  methods: {
+    start () {
+      this.$emit('start')
+    },
+    stop () {
+      this.$emit('stop')
+    }
+  }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-  margin-top: 60px;
-}
 </style>

@@ -1,94 +1,98 @@
-<template>
-  <div>
-    <h1> Table: {{ table.id }}</h1>
-    <input v-model="player">
-    <button @click=createPlayer>Add Player</button>
-    <button @click=start>Start</button>
-    <h3> Players </h3>
-    <div v-if="table.game !== null">
-      <table>
-        <thead>
-          <th v-for="column in playerKeys" :key="column"> {{ column }}</th>
-        </thead>
-        <tbody>
-          <tr v-for="player in table.game.players" :key="player.id">
-            <td v-for="column in Object.keys(player)" :key="column"> {{ player[column] }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div v-else>
-      <table>
-        <thead>
-          <th v-for="column in playerKeys" :key="column"> {{ column }}</th>
-        </thead>
-        <tbody>
-          <tr v-for="player in table.players" :key="player.id">
-            <td v-for="column in Object.keys(player)" :key="column"> {{ player[column] }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+<template lang="pug">
+  div
+    <!-- .columns-->
+    <!--   .column-->
+    <!--     input(v-model="player")-->
+    <!--     button(@click="createPlayer") Add Player-->
 
-    <div>
-      <h4>Round:</h4>
+    .columns
+      .column
+        .is-size-3.has-text-centered
+          span.has-text-weight-bold Table:
+          span  {{ table.id }}
+    .columns(v-if="viewedGame !== undefined")
+      .column.players
+        .title.is-4 Players
+        div(v-if="viewedAction !== undefined")
+          .columns.is-multiline.is-vcentered
+            .column(v-for="(player, playerIndex) in viewedAction.state.players" :key="player.id")
+              .card
+                .card-header
+                  .card-header-title.is-centered {{ player.name }}
+                  .card-header-icon(v-if="playerIndex === viewedAction.state.dealer")
+                    span.icon.has-text-primary
+                      .fas.fa-usd-circle
+                  .card-header-icon(v-if="playerIndex === viewedAction.state.active_player")
+                    span.icon.has-text-info
+                      .fas.fa-user-circle
+                .card-content
+                  .columns
+                    .column(v-for="card in player.hand" :key="card")
+                      card.container(:card="card")
+                .card-footer
+                  .card-footer-item.has-space-between
+                    span.icon
+                      .fal.fa-coins
+                    div {{ player.chips }}
+                  .card-footer-item.has-space-between
+                    span.icon
+                      .fal.fa-hand-holding-usd
+                    div {{ player.to_call }}
 
-      <table>
-        <thead>
-          <th>Stage</th>
-          <th>Pot</th>
-          <th>Active Player</th>
-          <th>Board</th>
-        </thead>
-        <tr v-if="table.round !== null">
-          <td> {{ table.round.stage }} </td>
-          <td> {{ table.round.pot }} </td>
-          <td> {{ table.round.active_player }} </td>
-          <td> {{ table.round.board }} </td>
-        </tr>
-      </table>
-
-      <h5>Actions:</h5>
-      <ul v-if="table.round !== null">
-        <li v-for="action in table.round.actions" :key="action">{{ action }}</li>
-      </ul>
-    </div>
-
-    <div>
-      <div v-if="table.game !== null">
-        <h4>Game:</h4>
-        <table>
-          <thead>
-            <th>Dealer</th>
-            <th>Blind</th>
-          </thead>
-          <tr >
-            <td> {{ table.game.dealer }} </td>
-            <td> {{ table.game.blind }} </td>
-          </tr>
-        </table>
-        <div>
-          <h4>All Actions:</h4>
-          <ul v-if="table.game.rounds !== null">
-            <div v-for="round in table.game.rounds" :key="round">
-              <hr>
-              <li v-for="action in round.actions" :key="action">{{ action }}</li>
-            </div>
-          </ul>
-        </div>
-      </div>
-
-      <h4>Table:</h4>
-      <pre>
-        {{table}}
-      </pre>
-    </div>
-
-  </div>
+      .column.info
+        .columns
+          .column
+            a.icon(@click="firstGame")
+              .fal.fa-chevron-double-left
+            a.icon(@click="previousGame")
+              .fal.fa-chevron-left
+            span.title.is-5
+              | Games
+              | {{ games.length - selectedGame }}
+              | /
+              | {{ games.length }}
+            a.icon(@click="nextGame")
+              .fal.fa-chevron-right
+            a.icon(@click="lastGame")
+              .fal.fa-chevron-double-right
+          .column
+            a.icon(@click="firstRound")
+              .far.fa-chevron-double-left
+            a.icon(@click="previousRound")
+              .far.fa-chevron-left
+            span.title.is-5
+              | Round
+              | {{ rounds.length - selectedRound }}
+              | /
+              | {{ rounds.length }}
+            a.icon(@click="nextRound")
+              .far.fa-chevron-right
+            a.icon(@click="lastRound")
+              .far.fa-chevron-double-right
+        div(v-if="viewedAction !== undefined")
+          .columns
+            .column
+              div Stage
+              div {{ viewedAction.state.stage }}
+            .column
+              div Pot
+              div {{ viewedAction.state.pot }}
+            .column
+              div Board
+              .columns
+                .column(v-for="card in viewedAction.state.board" :key="card")
+                  card.container(:card="card")
+          nav.panel
+            .panel-heading Actions
+            .panel-block(v-for="(action, ai) in actions" :key="ai" @click="selectAction(ai)" :class="{'is-active':selectedAction == ai}")
+              .is-one-quarter
+                span.tag {{ action.action }}
+              | {{ action.msg }}
 </template>
 
 <script>
 import {Socket} from 'phoenix'
+import Card from '@/components/Card'
 
 export default {
   name: 'Table',
@@ -97,18 +101,39 @@ export default {
       table: { players: [], round: {}, game: {} },
       player: '',
       socket: null,
-      channel: null
+      channel: null,
+      selectedAction: 0,
+      selectedGame: 0,
+      selectedRound: 0
     }
   },
+  components: { Card },
+
   computed: {
-    playerKeys () {
-      if (this.table.players.length === 0) {
-        return []
+    games () {
+      return [this.table.game].concat(this.table.games)
+    },
+    rounds () {
+      if (this.selectedGame == 0) {
+        return [this.table.round].concat(this.viewedGame.rounds)
       } else {
-        return Object.keys(this.table.players[0])
+        return this.viewedGame.rounds
       }
+    },
+    actions () {
+      return this.viewedRound.actions
+    },
+    viewedGame () {
+      return this.games[this.selectedGame]
+    },
+    viewedRound () {
+      return this.rounds[this.selectedRound]
+    },
+    viewedAction () {
+      return this.actions[this.selectedAction]
     }
   },
+
   mounted () {
     this.socket = new Socket('ws://localhost:4000/socket', {params: {type: 'viewer'}})
 
@@ -116,11 +141,17 @@ export default {
 
     this.channel = this.socket.channel('table:' + this.$route.params.tableId, {})
     this.channel.join()
-      .receive('ok', resp => { console.log(resp.table); this.table = resp.table })
+      .receive('ok', resp => { this.table = resp.table })
       .receive('error', resp => { console.log('Unable to join', resp) })
 
     this.channel.on('update', resp => { this.table = resp.table })
   },
+
+  created () {
+    this.$parent.$on('start', this.start)
+    this.$parent.$on('stop', this.stop)
+  },
+
   methods: {
     createPlayer () {
       this.channel.push('create_player', { player: this.player })
@@ -128,7 +159,61 @@ export default {
     },
     start () {
       this.channel.push('start', {})
+    },
+    stop () {
+      this.channel.push('stop', {})
+    },
+    selectAction (index) {
+      this.selectedAction = index
+    },
+    nextRound () {
+      this.selectedAction = 0
+      this.selectedRound = this.selectedRound - 1
+    },
+    previousRound () {
+      this.selectedAction = 0
+      this.selectedRound = this.selectedRound + 1
+    },
+    firstRound () {
+      this.selectedAction = 0
+      this.selectedRound = this.rounds.length - 1
+    },
+    lastRound () {
+      this.selectedAction = 0
+      this.selectedRound = 0
+    },
+    nextGame () {
+      this.selectedAction = 0
+      this.selectedRound = 0
+      this.selectedGame = this.selectedGame - 1
+    },
+    previousGame () {
+      this.selectedAction = 0
+      this.selectedRound = 0
+      this.selectedGame = this.selectedGame + 1
+    },
+    firstGame () {
+      this.selectedAction = 0
+      this.selectedRound = 0
+      this.selectedGame = this.games.length - 1
+    },
+    lastGame () {
+      this.selectedAction = 0
+      this.selectedRound = 0
+      this.selectedGame = 0
     }
   }
 }
 </script>
+
+<style lang="scss">
+.is-vertical {
+  flext-direction: column;
+}
+.has-space-between {
+  justify-content: space-between;
+}
+.is-one-quarter {
+  width: 20%;
+}
+</style>
