@@ -43,45 +43,42 @@
         .columns
           .column
             a.icon(@click="firstGame")
-              .fal.fa-chevron-double-left
+              .fas.fa-angle-double-left
             a.icon(@click="previousGame")
-              .fal.fa-chevron-left
+              .fas.fa-angle-left
             span.title.is-5
               | Games
               | {{ games.length - selectedGame }}
               | /
               | {{ games.length }}
             a.icon(@click="nextGame")
-              .fal.fa-chevron-right
+              .fas.fa-angle-right
             a.icon(@click="lastGame")
-              .fal.fa-chevron-double-right
+              .fas.fa-angle-double-right
           .column
             a.icon(@click="firstRound")
-              .far.fa-chevron-double-left
+              .fas.fa-angle-double-left
             a.icon(@click="previousRound")
-              .far.fa-chevron-left
+              .fas.fa-angle-left
             span.title.is-5
               | Round
               | {{ rounds.length - selectedRound }}
               | /
               | {{ rounds.length }}
             a.icon(@click="nextRound")
-              .far.fa-chevron-right
+              .fas.fa-angle-right
             a.icon(@click="lastRound")
-              .far.fa-chevron-double-right
+              .fas.fa-angle-double-right
         div(v-if="viewedAction !== undefined")
           .columns
-            .column
-              div Stage
-              div {{ viewedAction.state.stage }}
-            .column
-              div Pot
-              div {{ viewedAction.state.pot }}
             .column
               div Board
               .columns
                 .column(v-for="card in viewedAction.state.board" :key="card")
                   card.container(:card="card")
+            .column
+              div Pot
+              div {{ viewedAction.state.pot }}
           nav.panel
             .panel-heading Actions
             .panel-block(v-for="(action, ai) in actions" :key="ai" @click="selectAction(ai)" :class="{'is-active':selectedAction == ai}")
@@ -111,10 +108,14 @@ export default {
 
   computed: {
     games () {
-      return [this.table.game].concat(this.table.games)
+      if (this.table.game !== null) {
+        return [this.table.game].concat(this.table.games)
+      } else {
+        return []
+      }
     },
     rounds () {
-      if (this.selectedGame == 0) {
+      if (this.selectedGame === 0) {
         return [this.table.round].concat(this.viewedGame.rounds)
       } else {
         return this.viewedGame.rounds
@@ -215,5 +216,9 @@ export default {
 }
 .is-one-quarter {
   width: 20%;
+}
+.panel {
+  max-height: calc(100vh - 380px);
+  overflow: auto;
 }
 </style>

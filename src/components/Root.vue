@@ -3,7 +3,7 @@
     button.button.is-primary(@click="createTable") Create table
     ul
       li(v-for="table in tables" :key="table")
-        router-link(:to="table") {{ table }}
+        router-link(:to="table.id") {{ table.id }}
         button.button.is-danger(@click="deleteTable(table)")
           span.icon
             .fal.fa-trash-alt
